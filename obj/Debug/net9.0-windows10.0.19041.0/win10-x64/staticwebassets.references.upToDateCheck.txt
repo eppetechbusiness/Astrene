@@ -1,0 +1,5 @@
+C:\Users\hmohale\source\repos\Astrene\Astrene.Shared\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\hmohale\source\repos\Astrene\Astrene.Shared\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\hmohale\source\repos\Astrene\Astrene.Shared\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\hmohale\source\repos\Astrene\Astrene.Shared\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\hmohale\source\repos\Astrene\Astrene.Shared\obj\Debug\net9.0\staticwebassets.build.json

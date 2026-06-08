@@ -1,0 +1,4 @@
+wwwroot\app.css
+wwwroot\index.html
+C:\Users\hmohale\source\repos\Astrene\Astrene\wwwroot\app.css
+C:\Users\hmohale\source\repos\Astrene\Astrene\wwwroot\index.html
