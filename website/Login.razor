@@ -1,0 +1,296 @@
+@page "/"
+@page "/login"
+@using System.Text.RegularExpressions
+
+<h1>Login</h1>
+
+@if (!string.IsNullOrEmpty(generalError))
+{
+    <p>@generalError</p>
+}
+
+<form @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
+    <fieldset>
+        <legend>Login with</legend>
+        <label>
+            <input type="radio" name="loginMethod" checked="@(loginMethod == LoginMethod.Username)" @onchange="@(_ => SwitchMethod(LoginMethod.Username))" />
+            Username
+        </label>
+        <label>
+            <input type="radio" name="loginMethod" checked="@(loginMethod == LoginMethod.Email)" @onchange="@(_ => SwitchMethod(LoginMethod.Email))" />
+            Email
+        </label>
+    </fieldset>
+
+    @if (loginMethod == LoginMethod.Username)
+    {
+        <p>
+            <label for="username">Username</label><br />
+            <input id="username" @bind="username" @bind:event="oninput" />
+            @if (!string.IsNullOrEmpty(usernameError)) { <span>@usernameError</span> }
+        </p>
+    }
+    else
+    {
+        <p>
+            <label for="email">Email</label><br />
+            <input id="email" type="email" @bind="email" @bind:event="oninput" />
+            @if (!string.IsNullOrEmpty(emailError)) { <span>@emailError</span> }
+        </p>
+    }
+
+    <p>
+        <label for="password">Password</label><br />
+        <input id="password" type="password" @bind="password" @bind:event="oninput" />
+        @if (!string.IsNullOrEmpty(passwordError)) { <span>@passwordError</span> }
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" @bind="rememberMe" />
+            Remember Me
+        </label>
+    </p>
+
+    <p>
+        <button type="button" @onclick="ToggleForgotPassword">Forgot Password</button>
+    </p>
+
+    @if (showForgotPassword)
+    {
+        <fieldset>
+            <legend>Forgot Password</legend>
+            <label for="resetEmail">Email</label><br />
+            <input id="resetEmail" type="email" @bind="forgotPasswordEmail" />
+            <button type="button" @onclick="SendResetLink">Send Reset Link</button>
+        </fieldset>
+    }
+
+    <p>
+        <label>
+            <input type="checkbox" @bind="useMfa" />
+            Enable Multi-Factor Authentication (MFA)
+        </label>
+    </p>
+
+    @if (useMfa)
+    {
+        <p>
+            <label for="mfaCode">MFA Verification Code</label><br />
+            <input id="mfaCode" @bind="mfaCode" />
+        </p>
+    }
+
+    <fieldset>
+        <legend>CAPTCHA</legend>
+        <label for="captcha">@captchaQuestion</label><br />
+        <input id="captcha" @bind="captchaAnswer" />
+        <button type="button" @onclick="RefreshCaptcha">New CAPTCHA</button>
+    </fieldset>
+
+    <p>
+        <button type="submit">Login</button>
+    </p>
+</form>
+
+<h2>Single Sign-On (SSO)</h2>
+<p>
+    <button type="button" @onclick="@(() => SignInWithSso("Google"))">Sign in with Google</button>
+    <button type="button" @onclick="@(() => SignInWithSso("Microsoft"))">Sign in with Microsoft</button>
+</p>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private enum LoginMethod { Username, Email }
+
+    private const string ValidUsername = "demo";
+    private const string ValidEmail = "demo@example.com";
+    private const string ValidPassword = "Password1!";
+
+    private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+
+    private LoginMethod loginMethod = LoginMethod.Username;
+    private string username = string.Empty;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private bool rememberMe;
+    private bool showForgotPassword;
+    private string forgotPasswordEmail = string.Empty;
+    private bool useMfa;
+    private string mfaCode = string.Empty;
+    private string captchaQuestion = string.Empty;
+    private string captchaAnswer = string.Empty;
+    private int captchaExpected;
+    private int loginAttempts;
+    private string usernameError = string.Empty;
+    private string emailError = string.Empty;
+    private string passwordError = string.Empty;
+    private string generalError = string.Empty;
+    private string message = string.Empty;
+
+    protected override void OnInitialized() => RefreshCaptcha();
+
+    private void SwitchMethod(LoginMethod method)
+    {
+        loginMethod = method;
+        ClearErrors();
+    }
+
+    private void ClearErrors()
+    {
+        usernameError = emailError = passwordError = generalError = message = string.Empty;
+    }
+
+    private void ToggleForgotPassword() => showForgotPassword = !showForgotPassword;
+
+    private void SendResetLink()
+    {
+        message = string.IsNullOrWhiteSpace(forgotPasswordEmail)
+            ? "Enter your email to reset password."
+            : $"Password reset link sent to {forgotPasswordEmail}.";
+    }
+
+    private void RefreshCaptcha()
+    {
+        var a = Random.Shared.Next(1, 10);
+        var b = Random.Shared.Next(1, 10);
+        captchaExpected = a + b;
+        captchaQuestion = $"What is {a} + {b}?";
+        captchaAnswer = string.Empty;
+    }
+
+    private void SignInWithSso(string provider) => message = $"Redirecting to {provider} SSO...";
+
+    private bool ValidateUsername()
+    {
+        usernameError = string.Empty;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            usernameError = "Username is required.";
+            return false;
+        }
+        if (username.Length < 3 || username.Length > 100)
+            return false;
+        return true;
+    }
+
+    private bool ValidateEmail()
+    {
+        emailError = string.Empty;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            emailError = "Invalid email format.";
+            return false;
+        }
+        if (!EmailRegex.IsMatch(email))
+        {
+            emailError = "Invalid email format.";
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidatePassword()
+    {
+        passwordError = string.Empty;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            passwordError = "Password is required.";
+            return false;
+        }
+        if (password.Length < 8 ||
+            !password.Any(char.IsUpper) ||
+            !password.Any(char.IsLower) ||
+            !password.Any(char.IsDigit) ||
+            !password.Any(ch => !char.IsLetterOrDigit(ch)))
+        {
+            passwordError = "Password does not meet complexity requirements.";
+            return false;
+        }
+        return true;
+    }
+
+    private void HandleLogin()
+    {
+        ClearErrors();
+
+        if (loginAttempts >= 5)
+        {
+            generalError = "Too many login attempts.";
+            return;
+        }
+
+        if (!int.TryParse(captchaAnswer, out var captchaValue) || captchaValue != captchaExpected)
+        {
+            generalError = "Invalid credentials.";
+            RefreshCaptcha();
+            return;
+        }
+
+        if (useMfa && string.IsNullOrWhiteSpace(mfaCode))
+        {
+            generalError = "Invalid credentials.";
+            return;
+        }
+
+        var fieldsValid = loginMethod == LoginMethod.Username ? ValidateUsername() : ValidateEmail();
+        fieldsValid &= ValidatePassword();
+        if (!fieldsValid)
+        {
+            if (loginMethod == LoginMethod.Username && string.IsNullOrEmpty(usernameError) && !string.IsNullOrWhiteSpace(username))
+                generalError = "Invalid credentials.";
+            return;
+        }
+
+        if (loginMethod == LoginMethod.Username)
+        {
+            if (username.Equals("locked", StringComparison.OrdinalIgnoreCase))
+            {
+                generalError = "Account locked.";
+                return;
+            }
+            if (username.Equals("disabled", StringComparison.OrdinalIgnoreCase))
+            {
+                generalError = "Account disabled.";
+                return;
+            }
+            if (username.Equals("expired", StringComparison.OrdinalIgnoreCase))
+            {
+                generalError = "Session expired.";
+                return;
+            }
+            if (!username.Equals(ValidUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                usernameError = "Username not found.";
+                loginAttempts++;
+                return;
+            }
+        }
+        else
+        {
+            if (!email.Equals(ValidEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                emailError = "Email address not found.";
+                loginAttempts++;
+                return;
+            }
+        }
+
+        if (password != ValidPassword)
+        {
+            passwordError = "Incorrect password.";
+            loginAttempts++;
+            return;
+        }
+
+        loginAttempts = 0;
+        var identifier = loginMethod == LoginMethod.Username ? username : email;
+        var rememberText = rememberMe ? " (Remember Me enabled)" : string.Empty;
+        var mfaText = useMfa ? " with MFA" : string.Empty;
+        message = $"Logged in as {identifier}{mfaText}{rememberText}.";
+    }
+}

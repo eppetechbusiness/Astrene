@@ -70,4 +70,11 @@
     <ProjectReference Include="..\Astrene.Shared\Astrene.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="website\**" />
+    <Content Remove="website\**" />
+    <EmbeddedResource Remove="website\**" />
+    <None Remove="website\**" />
+  </ItemGroup>
+
 </Project>
