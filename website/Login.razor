@@ -1,0 +1,184 @@
+@page "/"
+@page "/login"
+@using System.Text.RegularExpressions
+@using Astrena.Website.Services
+@inject UserSession Session
+@inject NavigationManager Navigation
+
+<div class="login-page">
+    <div class="login-card">
+        <img src="images/astrene-logo.png" alt="Astrene" class="brand-logo" />
+
+        <div class="login-card-header">
+            <h1>Sign in to your account</h1>
+            <p>Select your role to continue</p>
+        </div>
+
+        <div class="role-toggle">
+            @foreach (var role in Roles)
+            {
+                <button type="button"
+                        class="role-btn @(selectedRole == role ? "active" : "")"
+                        @onclick="@(() => SelectRole(role))">
+                    @role
+                </button>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(generalError))
+        {
+            <div class="alert alert-error">@generalError</div>
+        }
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <form @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input id="email" type="email" placeholder="you@organisation.com" @bind="email" @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(emailError)) { <span class="field-error">@emailError</span> }
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="Enter your password" @bind="password" @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(passwordError)) { <span class="field-error">@passwordError</span> }
+            </div>
+
+            <div class="form-row">
+                <label class="checkbox-label">
+                    <input type="checkbox" @bind="rememberMe" />
+                    Keep me signed in
+                </label>
+                <a href="/forgot-password" class="link-btn">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign In</button>
+        </form>
+
+        <div class="sso-section">
+            <div class="sso-divider"><span>or continue with</span></div>
+            <div class="sso-buttons">
+                <button type="button" class="btn btn-sso" @onclick="@(() => SignInWithSso("Google"))">
+                    <img src="images/google.svg" alt="" />
+                    Google
+                </button>
+                <button type="button" class="btn btn-sso" @onclick="@(() => SignInWithSso("Microsoft"))">
+                    <img src="images/microsoft.svg" alt="" />
+                    Microsoft SSO
+                </button>
+            </div>
+        </div>
+
+        <p class="login-footer">
+            By signing in you agree to the ASTRENE
+            <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. POPIA compliant.
+        </p>
+    </div>
+</div>
+
+@code {
+    private static readonly string[] Roles = ["Administrator", "Facilitator", "Student"];
+
+    private const string ValidEmail = "demo@example.com";
+    private const string ValidPassword = "Password1!";
+
+    private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+
+    private string selectedRole = "Facilitator";
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private bool rememberMe;
+    private int loginAttempts;
+    private string emailError = string.Empty;
+    private string passwordError = string.Empty;
+    private string generalError = string.Empty;
+    private string message = string.Empty;
+
+    private void SelectRole(string role) => selectedRole = role;
+
+    private void ClearErrors()
+    {
+        emailError = passwordError = generalError = message = string.Empty;
+    }
+
+    private void SignInWithSso(string provider) => message = $"Redirecting to {provider} SSO...";
+
+    private bool ValidateEmail()
+    {
+        emailError = string.Empty;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            emailError = "Invalid email format.";
+            return false;
+        }
+        if (!EmailRegex.IsMatch(email))
+        {
+            emailError = "Invalid email format.";
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidatePassword()
+    {
+        passwordError = string.Empty;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            passwordError = "Password is required.";
+            return false;
+        }
+        if (password.Length < 8 ||
+            !password.Any(char.IsUpper) ||
+            !password.Any(char.IsLower) ||
+            !password.Any(char.IsDigit) ||
+            !password.Any(ch => !char.IsLetterOrDigit(ch)))
+        {
+            passwordError = "Password does not meet complexity requirements.";
+            return false;
+        }
+        return true;
+    }
+
+    private void HandleLogin()
+    {
+        ClearErrors();
+
+        if (loginAttempts >= 5)
+        {
+            generalError = "Too many login attempts.";
+            return;
+        }
+
+        if (!ValidateEmail() | !ValidatePassword())
+            return;
+
+        if (!email.Equals(ValidEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            emailError = "Email address not found.";
+            loginAttempts++;
+            return;
+        }
+
+        if (password != ValidPassword)
+        {
+            passwordError = "Incorrect password.";
+            loginAttempts++;
+            return;
+        }
+
+        loginAttempts = 0;
+        Session.SignIn(email, selectedRole);
+        Navigation.NavigateTo(GetDashboardRoute(selectedRole));
+    }
+
+    private static string GetDashboardRoute(string role) => role switch
+    {
+        "Administrator" => "/admin/dashboard",
+        "Facilitator" => "/facilitator/dashboard",
+        _ => "/student/dashboard"
+    };
+}

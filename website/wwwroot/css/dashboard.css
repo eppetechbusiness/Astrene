@@ -1,0 +1,93 @@
+.dashboard {
+    min-height: 100vh;
+    background: var(--surface-muted);
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-logo {
+    width: 100px;
+    height: auto;
+}
+
+.dashboard-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard-role {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--astrene-blue);
+    background: #f0f6ff;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+}
+
+.dashboard-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.dashboard-main h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    color: var(--astrene-navy);
+}
+
+.dashboard-welcome {
+    margin: 0 0 2rem;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.dashboard-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+
+.dashboard-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: var(--astrene-navy);
+}
+
+.dashboard-card p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.btn-outline {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--astrene-navy);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    border-color: var(--astrene-blue);
+    color: var(--astrene-blue);
+}
