@@ -1,19 +1,17 @@
 @page "/facilitator/dashboard"
-@inject UserSession Session
-@inject NavigationManager Navigation
 
 <div class="dashboard">
     <header class="dashboard-header">
         <img src="images/astrene-logo.png" alt="Astrene" class="dashboard-logo" />
         <div class="dashboard-header-right">
             <span class="dashboard-role">Facilitator</span>
-            <button type="button" class="btn btn-outline" @onclick="Logout">Sign out</button>
+            <a href="/login" class="btn btn-outline">Back to login</a>
         </div>
     </header>
 
     <main class="dashboard-main">
         <h1>Facilitator Dashboard</h1>
-        <p class="dashboard-welcome">Welcome, @Session.Email</p>
+        <p class="dashboard-welcome">Welcome, Facilitator User</p>
 
         <div class="dashboard-grid">
             <div class="dashboard-card">
@@ -31,17 +29,3 @@
         </div>
     </main>
 </div>
-
-@code {
-    protected override void OnInitialized()
-    {
-        if (!Session.IsAuthenticated || Session.Role != "Facilitator")
-            Navigation.NavigateTo("/login");
-    }
-
-    private void Logout()
-    {
-        Session.SignOut();
-        Navigation.NavigateTo("/login");
-    }
-}
